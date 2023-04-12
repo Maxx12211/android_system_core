@@ -493,7 +493,7 @@ static void tune_verity(const std::string& blk_device, const FstabEntry& entry,
     bool has_verity = (sb->s_feature_ro_compat & cpu_to_le32(EXT4_FEATURE_RO_COMPAT_VERITY)) != 0;
     bool want_verity = entry.fs_mgr_flags.fs_verity;
 
-    if (has_verity || !want_verity) {
+    if (entry.mount_point != "/data" || has_verity || !want_verity) {
         return;
     }
 
@@ -1159,6 +1159,10 @@ class CheckpointManager {
                     PERROR << "Cannot get device size";
                     return false;
                 }
+
+                // dm-bow will not load if size is not a multiple of 4096
+                // rounding down does not hurt, since ext4 will only use full blocks
+                size &= ~7;
 
                 android::dm::DmTable table;
                 auto bowTarget =
@@ -2067,7 +2071,7 @@ bool fs_mgr_swapon_all(const Fstab& fstab) {
             // we can assume the device number is 0.
             if (entry.max_comp_streams >= 0) {
                 auto zram_mcs_fp = std::unique_ptr<FILE, decltype(&fclose)>{
-                        fopen(ZRAM_CONF_MCS, "re"), fclose};
+                        fopen(ZRAM_CONF_MCS, "re+"), fclose};
                 if (zram_mcs_fp == nullptr) {
                     LERROR << "Unable to open zram conf comp device " << ZRAM_CONF_MCS;
                     ret = false;

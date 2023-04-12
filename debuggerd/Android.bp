@@ -210,6 +210,7 @@ cc_library_static {
     header_libs: [
         "bionic_libc_platform_headers",
         "gwp_asan_headers",
+        "liblog_headers",
     ],
 
     static_libs: [
@@ -218,7 +219,6 @@ cc_library_static {
         "liblzma",
         "libbase",
         "libcutils",
-        "liblog",
     ],
     runtime_libs: [
         "libdexfile",           // libdexfile_support dependency
@@ -298,6 +298,13 @@ cc_test {
         "libdebuggerd/test/open_files_list_test.cpp",
         "libdebuggerd/test/utility_test.cpp",
     ],
+
+    product_variables: {
+        malloc_not_svelte: {
+            srcs: ["libdebuggerd/test/scudo_test.cpp"],
+            header_libs: ["scudo_headers"],
+        },
+    },
 
     target: {
         android: {
